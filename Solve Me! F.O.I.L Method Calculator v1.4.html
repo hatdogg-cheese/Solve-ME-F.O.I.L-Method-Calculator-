@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Solve Me! F.O.I.L Method Calculator</title>
+
+<style>
+body{
+font-family:'Segoe UI', Arial;
+margin:0;
+color:white;
+text-align:center;
+background-color:#0f2027;
+background-image:
+linear-gradient(rgba(0,255,255,0.08) 1px, transparent 1px),
+linear-gradient(90deg, rgba(0,255,255,0.08) 1px, transparent 1px),
+linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+overflow-x:hidden;
+}
+
+h1{
+margin-top:15px;
+font-size:38px;
+text-shadow:0 0 10px cyan,0 0 25px cyan,0 0 50px cyan;
+}
+
+.topExpression{
+width:100%;
+padding:20px;
+font-size:32px;
+background:black;
+border-top:2px solid cyan;
+border-bottom:2px solid cyan;
+box-shadow:0 0 20px cyan,inset 0 0 15px cyan;
+}
+
+.topExpression input{
+width:70px;
+font-size:24px;
+text-align:center;
+background:black;
+color:cyan;
+border:2px solid cyan;
+border-radius:8px;
+}
+
+.calculator{
+margin:auto;
+margin-top:30px;
+width:550px;
+padding:25px;
+background:rgba(0,0,0,0.75);
+border-radius:15px;
+box-shadow:0 0 25px cyan;
+}
+
+button{
+padding:12px 18px;
+margin:6px;
+font-size:16px;
+font-weight:bold;
+border:none;
+border-radius:10px;
+cursor:pointer;
+transition:0.3s;
+}
+
+button:hover{
+transform:scale(1.1);
+}
+
+.step{
+margin-top:10px;
+padding:12px;
+background:black;
+border-radius:10px;
+box-shadow:0 0 10px cyan inset;
+font-size:18px;
+}
+
+.result{
+font-size:28px;
+margin-top:20px;
+color:cyan;
+}
+
+#answerArea{
+display:none;
+margin-top:15px;
+}
+
+#answerInput{
+font-size:20px;
+padding:10px;
+width:250px;
+}
+
+/* POPUPS */
+
+.popup{
+display:none;
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+background:black;
+padding:20px;
+border-radius:15px;
+box-shadow:0 0 40px cyan;
+text-align:center;
+z-index:999;
+}
+
+.popup img{
+width:300px;
+border-radius:10px;
+}
+
+/* CONFETTI */
+
+.confetti{
+position:fixed;
+width:10px;
+height:10px;
+top:-10px;
+animation:fall 3s linear forwards;
+z-index:1000;
+}
+
+@keyframes fall{
+to{
+transform:translateY(100vh) rotate(720deg);
+opacity:0;
+}
+}
+
+/* SHAKE */
+
+@keyframes shake{
+0%{transform:translateX(0);}
+25%{transform:translateX(-10px);}
+50%{transform:translateX(10px);}
+75%{transform:translateX(-10px);}
+100%{transform:translateX(0);}
+}
+
+.shake{
+animation:shake 0.4s;
+}
+</style>
+</head>
+<body>
+
+<h1>Solve Me! F.O.I.L Method Calculator</h1>
+
+<button id="gameModeBtn" onclick="toggleGameMode()">
+Enable Game Mode 🎮
+</button>
+
+<div class="topExpression">
+(
+<input id="a" type="number">x +
+<input id="b" type="number">
+)
+(
+<input id="c" type="number">x +
+<input id="d" type="number">
+)
+</div>
+
+<div class="calculator">
+
+<button onclick="first()">First 🔥</button>
+<button onclick="outer()">Outer 😎</button>
+<button onclick="inner()">Inner 💀</button>
+<button onclick="last()">Last 🔩</button>
+
+<br>
+
+<button onclick="combine()">Combine Like Terms ⚡</button>
+
+<button onclick="result()">Final Answer 🎉</button>
+
+<div id="firstStep" class="step"></div>
+<div id="outerStep" class="step"></div>
+<div id="innerStep" class="step"></div>
+<div id="lastStep" class="step"></div>
+<div id="combineStep" class="step"></div>
+
+<div id="resultBox" class="result"></div>
+
+<div id="answerArea">
+
+<input id="answerInput" placeholder="Enter your answer">
+
+<br>
+
+<button onclick="checkAnswer()">Submit</button>
+
+</div>
+
+</div>
+
+
+<!-- CORRECT POPUP -->
+
+<div id="correctPopup" class="popup">
+
+<img src="correct-meme.jpg">
+
+<h2 style="color:cyan;">
+Slayy, kween! You got it right, now claim your prize!
+</h2>
+
+<button onclick="closeCorrect()">Close</button>
+
+</div>
+
+
+<!-- WRONG POPUP -->
+
+<div id="wrongPopup" class="popup" style="box-shadow:0 0 40px red;">
+
+<img src="wrong-meme.jpg">
+
+<h2 style="color:red;">
+Wrong baby, TRY AGAIN!!!
+</h2>
+
+<button onclick="closeWrong()">Close</button>
+
+</div>
+
+
+<!-- SOUNDS -->
+
+<audio id="soundFirst" src="https://www.myinstants.com/media/sounds/vine-boom.mp3"></audio>
+<audio id="soundOuter" src="https://www.myinstants.com/media/sounds/bruh.mp3"></audio>
+<audio id="soundInner" src="https://www.myinstants.com/media/sounds/windows-error.mp3"></audio>
+<audio id="soundLast" src="https://www.myinstants.com/media/sounds/metal-pipe-clang.mp3"></audio>
+<audio id="soundCombine" src="https://www.myinstants.com/media/sounds/anime-wow-sound-effect.mp3"></audio>
+<audio id="soundResult" src="https://www.myinstants.com/media/sounds/applause.mp3"></audio>
+
+
+<script>
+
+let firstVal, outerVal, innerVal, lastVal, middleVal;
+let correctAnswer="";
+let gameMode=false;
+
+
+/* GAME MODE */
+
+function toggleGameMode(){
+
+gameMode=!gameMode;
+
+if(gameMode){
+
+gameModeBtn.innerText="Game Mode ON 🎮";
+
+answerArea.style.display="block";
+
+}else{
+
+gameModeBtn.innerText="Enable Game Mode 🎮";
+
+answerArea.style.display="none";
+
+}
+
+}
+
+
+/* GET VALUES */
+
+function getValues(){
+
+let a=parseFloat(document.getElementById("a").value);
+let b=parseFloat(document.getElementById("b").value);
+let c=parseFloat(document.getElementById("c").value);
+let d=parseFloat(document.getElementById("d").value);
+
+if(isNaN(a)||isNaN(b)||isNaN(c)||isNaN(d)){
+alert("Enter all values first!");
+return null;
+}
+
+return {a,b,c,d};
+
+}
+
+
+/* FOIL STEPS */
+
+function first(){
+soundFirst.play();
+let v=getValues(); if(!v)return;
+firstVal=v.a*v.c;
+firstStep.innerHTML="First: "+firstVal+"x²";
+}
+
+function outer(){
+soundOuter.play();
+let v=getValues(); if(!v)return;
+outerVal=v.a*v.d;
+outerStep.innerHTML="Outer: "+outerVal+"x";
+}
+
+function inner(){
+soundInner.play();
+let v=getValues(); if(!v)return;
+innerVal=v.b*v.c;
+innerStep.innerHTML="Inner: "+innerVal+"x";
+}
+
+function last(){
+soundLast.play();
+let v=getValues(); if(!v)return;
+lastVal=v.b*v.d;
+lastStep.innerHTML="Last: "+lastVal;
+}
+
+function combine(){
+soundCombine.play();
+middleVal=outerVal+innerVal;
+combineStep.innerHTML="Combine: "+middleVal+"x";
+}
+
+
+/* RESULT */
+
+function result(){
+
+soundResult.play();
+
+correctAnswer=
+firstVal+"x²+"+middleVal+"x+"+lastVal;
+
+if(gameMode){
+
+resultBox.innerHTML="Enter your answer below.";
+
+}else{
+
+resultBox.innerHTML=
+firstVal+"x² + "+middleVal+"x + "+lastVal;
+
+}
+
+}
+
+
+/* NORMALIZE ANSWERS */
+
+function normalizeAnswer(text){
+
+return text
+.toLowerCase()
+.replace(/\s+/g,"")
+.replace(/xsquared/g,"x²")
+.replace(/x\^2/g,"x²")
+.replace(/x squared/g,"x²")
+.replace(/\*\*/g,"²");
+
+}
+
+
+/* CHECK ANSWER */
+
+function checkAnswer(){
+
+let user=
+normalizeAnswer(answerInput.value);
+
+let correct=
+normalizeAnswer(correctAnswer);
+
+if(user==correct){
+
+soundResult.play();
+
+correctPopup.style.display="block";
+
+launchConfetti();
+
+}else{
+
+document.body.classList.add("shake");
+
+setTimeout(()=>document.body.classList.remove("shake"),400);
+
+wrongPopup.style.display="block";
+
+}
+
+}
+
+
+function closeCorrect(){
+correctPopup.style.display="none";
+}
+
+function closeWrong(){
+wrongPopup.style.display="none";
+}
+
+
+/* CONFETTI */
+
+function launchConfetti(){
+
+for(let i=0;i<80;i++){
+
+let conf=document.createElement("div");
+
+conf.classList.add("confetti");
+
+conf.style.left=Math.random()*100+"vw";
+
+conf.style.backgroundColor=
+["red","yellow","cyan","lime","magenta","orange"]
+[Math.floor(Math.random()*6)];
+
+conf.style.animationDuration=(Math.random()*2+2)+"s";
+
+document.body.appendChild(conf);
+
+setTimeout(()=>conf.remove(),3000);
+
+}
+
+}
+
+</script>
+
+</body>
+</html>
